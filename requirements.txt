@@ -1,0 +1,10 @@
+google-genai
+sounddevice
+soundfile
+numpy
+openpyxl
+python-docx
+fpdf2
+python-dotenv
+customtkinter
+soundcard
