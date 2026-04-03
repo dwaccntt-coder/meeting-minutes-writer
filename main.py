@@ -346,22 +346,41 @@ class MeetingApp(ctk.CTk):
 
         ctk.CTkFrame(sidebar, height=1, fg_color=C["border"]).pack(fill="x", padx=16, pady=10)
 
-        # 녹음 버튼 (원형 스타일)
+        # 녹음 버튼 (세련된 원형)
         rec_frame = ctk.CTkFrame(sidebar, fg_color="transparent")
         rec_frame.pack(fill="x", padx=16, pady=(10, 0))
+
+        # 외곽 링 (그라데이션 효과)
+        self.rec_ring = ctk.CTkFrame(
+            rec_frame, width=90, height=90,
+            corner_radius=45, fg_color="#0a4d3a",
+            border_width=3, border_color=C["green"],
+        )
+        self.rec_ring.pack(pady=(4, 0))
+        self.rec_ring.pack_propagate(False)
+
         self.btn_record = ctk.CTkButton(
-            rec_frame, text="●", width=70, height=70,
-            font=ctk.CTkFont(size=30),
+            self.rec_ring, text="", width=70, height=70,
+            font=ctk.CTkFont(size=1),
             fg_color=C["green"], hover_color="#00a884", corner_radius=35,
             text_color="#ffffff",
             command=self._toggle_record,
         )
-        self.btn_record.pack(pady=(0, 4))
-        self.lbl_record_text = ctk.CTkLabel(
-            rec_frame, text="녹음 시작 (Ctrl+R)",
-            font=ctk.CTkFont(family="맑은 고딕", size=11), text_color="#ffffff",
+        self.btn_record.place(relx=0.5, rely=0.5, anchor="center")
+
+        # 녹음 아이콘 (Canvas로 원 그리기)
+        self.rec_icon = tk.Canvas(
+            self.btn_record, width=24, height=24,
+            bg=C["green"], highlightthickness=0, bd=0,
         )
-        self.lbl_record_text.pack()
+        self.rec_icon.place(relx=0.5, rely=0.5, anchor="center")
+        self.rec_icon.create_oval(2, 2, 22, 22, fill="#ff4757", outline="#ff6b81", width=2)
+
+        self.lbl_record_text = ctk.CTkLabel(
+            rec_frame, text="REC (Ctrl+R)",
+            font=ctk.CTkFont(family="Consolas", size=11, weight="bold"), text_color=C["green"],
+        )
+        self.lbl_record_text.pack(pady=(4, 0))
 
         # 일시정지 버튼 (#9) - 녹음 시작 시에만 표시
         self.btn_pause = ctk.CTkButton(
@@ -542,6 +561,7 @@ class MeetingApp(ctk.CTk):
         self.tree_files.configure(yscrollcommand=file_scroll.set)
         self.tree_files.pack(fill="both", expand=True, padx=8, pady=(0, 8), side="left")
         file_scroll.pack(fill="y", side="right", pady=(0, 8))
+        self.tree_files.bind("<Delete>", lambda e: self._delete_selected_file())
 
         # 히스토리 탭 (#7 통계)
         hist_top = ctk.CTkFrame(tab_history, fg_color="transparent")
@@ -698,6 +718,25 @@ class MeetingApp(ctk.CTk):
                 size_str = f"{size_bytes / (1024 * 1024):.1f} MB"
             mtime = datetime.fromtimestamp(os.path.getmtime(fpath)).strftime("%Y-%m-%d %H:%M")
             self.tree_files.insert("", tk.END, values=(name, ext, size_str, mtime))
+
+    def _delete_selected_file(self):
+        """파일 목록에서 선택된 파일 삭제 (Delete 키)."""
+        sel = self.tree_files.selection()
+        if not sel:
+            return
+        filename = self.tree_files.item(sel[0])["values"][0]
+        folder = get_save_folder()
+        filepath = os.path.join(folder, filename)
+        if not os.path.exists(filepath):
+            return
+        confirm = messagebox.askyesno("파일 삭제", f"정말 삭제할까요?\n\n{filename}")
+        if confirm:
+            try:
+                os.remove(filepath)
+                self._refresh_file_list()
+                show_toast(self, f"삭제됨: {filename}", toast_type="info")
+            except Exception as e:
+                messagebox.showerror("오류", f"삭제 실패: {e}")
 
     def _on_summary_mode_change(self, choice=None):
         mode_map = {"표준 요약": "standard", "간단 요약": "brief", "액션 아이템": "action"}
@@ -899,8 +938,12 @@ class MeetingApp(ctk.CTk):
             capture_sys = self.metadata.capture_system_audio if self.metadata else False
             self.recorder.start(capture_system=capture_sys)
 
-            self.btn_record.configure(text="■", fg_color=C["red"], hover_color="#c0392b", state="normal")
-            self.lbl_record_text.configure(text="녹음 중지")
+            self.btn_record.configure(fg_color=C["red"], hover_color="#c0392b", state="normal")
+            self.rec_ring.configure(fg_color="#4d0a0a", border_color=C["red"])
+            self.rec_icon.configure(bg=C["red"])
+            self.rec_icon.delete("all")
+            self.rec_icon.create_rectangle(4, 4, 20, 20, fill="#ffffff", outline="#ffffff", width=0)
+            self.lbl_record_text.configure(text="STOP", text_color=C["red"])
             self.btn_pause.pack(padx=16, pady=(0, 4), after=self.btn_record)
 
             self.status_var.set(f"녹음 중...  (세션 {self.session_count})  [{msg}]")
@@ -916,8 +959,12 @@ class MeetingApp(ctk.CTk):
             self._stop_realtime_transcription()
             self.btn_pause.pack_forget()
 
-            self.btn_record.configure(text="●", fg_color=C["green"], hover_color="#00a884", state="disabled")
-            self.lbl_record_text.configure(text="녹음 시작 (Ctrl+R)")
+            self.btn_record.configure(fg_color=C["green"], hover_color="#00a884", state="disabled")
+            self.rec_ring.configure(fg_color="#0a4d3a", border_color=C["green"])
+            self.rec_icon.configure(bg=C["green"])
+            self.rec_icon.delete("all")
+            self.rec_icon.create_oval(2, 2, 22, 22, fill="#ff4757", outline="#ff6b81", width=2)
+            self.lbl_record_text.configure(text="REC (Ctrl+R)", text_color=C["green"])
             self.status_var.set("최종 전사 + 요약 생성 중...  잠시 기다려 주세요")
 
             if audio_path:

@@ -231,8 +231,8 @@ class AudioRecorder:
 
         audio = np.concatenate(new_frames, axis=0)
 
-        # 2초 미만이면 롤백
-        if len(audio) < self.samplerate * 2:
+        # 1초 미만이면 롤백
+        if len(audio) < self.samplerate * 1:
             self._last_snapshot_idx -= len(new_frames)
             return None
 

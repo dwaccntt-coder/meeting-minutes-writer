@@ -120,9 +120,9 @@ You are a professional meeting transcriber. Transcribe the following audio accur
 }
 
 REALTIME_PROMPTS = {
-    "ko": "다음 오디오를 한국어로 전사해 주세요. 화자 구분하고, 말한 내용만 출력하세요. 필러(\"음\",\"어\",\"그\")는 제외하세요. 설명 없이 전사문만 작성하세요.",
-    "en": "Transcribe the following audio in English. Distinguish speakers. Output only the transcript without fillers or explanations.",
-    "ja": "以下の音声を日本語で文字起こししてください。話者を区別し、発話内容のみを出力してください。フィラーは除外してください。",
+    "ko": "한국어로 전사. 말한 내용만 출력. 필러 제외. 전사문만.",
+    "en": "Transcribe in English. Output only spoken words. No fillers.",
+    "ja": "日本語で文字起こし。発話内容のみ出力。フィラー除外。",
 }
 
 # ── 요약 프롬프트 (3가지 형식 x 3개 언어) ────────────────────────

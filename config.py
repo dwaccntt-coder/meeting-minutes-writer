@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv(Path(__file__).parent / ".env")
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
 AUDIO_SAMPLERATE = 16000
 AUDIO_CHANNELS = 1
 MAX_AUDIO_CHUNK_MB = 19  # Gemini 인라인 데이터 제한 ~20MB
